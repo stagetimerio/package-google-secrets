@@ -44,7 +44,7 @@ if (result.error) {
 
     // Handle logs
     const logs = stdoutParts.shift()
-    if (logs) logs.split('\n').forEach((log) => console.info(log))
+    if (logs) logs.split('\n').forEach((log) => console.info(log.trim()))
 
     // Handle output
     const output = stdoutParts.shift()
