@@ -1,6 +1,6 @@
 {
   "name": "@stagetimerio/google-secrets",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Load secrets from Google Cloud Secret Manager into environment variables, similar to dotenv",
   "license": "ISC",
   "author": "Lukas Hermann <hey@lukashermann.dev>",
