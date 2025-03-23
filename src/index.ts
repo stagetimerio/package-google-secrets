@@ -1,0 +1,40 @@
+/**
+ * Main entry point for programmatic usage
+ */
+import { GoogleSecretsConfig, mergeConfig } from './config.js'
+import { SecretManager, LoadedSecrets } from './SecretManager.js'
+import { withTimeout } from './utils.js'
+import * as logger from './logger.js'
+
+/**
+ * Loads secrets from Google Cloud Secret Manager and sets them as environment variables
+ */
+export async function loadSecrets (options: Partial<GoogleSecretsConfig> = {}): Promise<LoadedSecrets> {
+  // Merge provided options with environment config
+  const config = mergeConfig(options)
+  logger.init(config)
+
+  try {
+    // Create SecretManager instance
+    const secretManager = new SecretManager(config)
+
+    // Apply timeout if specified
+    if (config.timeout) {
+      logger.debug(`Setting timeout for secret loading: ${config.timeout}ms`)
+      return await withTimeout(
+        secretManager.loadSecrets(),
+        config.timeout,
+        `Secret loading timed out after ${config.timeout}ms`
+      )
+    }
+
+    // Load secrets without timeout
+    return await secretManager.loadSecrets()
+  } catch (error) {
+    logger.error(`Error loading secrets: ${error instanceof Error ? error.message : String(error)}`)
+    throw error
+  }
+}
+
+// Re-export types
+export { GoogleSecretsConfig, LoadedSecrets }

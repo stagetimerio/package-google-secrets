@@ -1,0 +1,1 @@
+export const JSON_OUTPUT_MARKER = '---SECRETS_JSON_BELOW---'
