@@ -9,8 +9,10 @@ import * as logger from './logger.js'
 
 /**
  * Interface for loaded secrets
+ * Always includes GOOGLE_PROJECT_ID regardless of other loaded secrets
  */
 export interface LoadedSecrets {
+  GOOGLE_PROJECT_ID: string
   [key: string]: string
 }
 
@@ -39,7 +41,11 @@ export class SecretManager {
     logger.debug('Project Id: ', projectId)
 
     const secretKeys = await this.getSecretKeys(projectId)
-    const loadedSecrets: LoadedSecrets = {}
+    const loadedSecrets: LoadedSecrets = {} as LoadedSecrets
+
+    // Add the project ID  as an environment variable and to the returned secrets object
+    loadedSecrets.GOOGLE_PROJECT_ID = projectId
+    process.env.GOOGLE_PROJECT_ID = projectId
 
     if (!secretKeys || secretKeys.length === 0) {
       logger.debug('No secret keys specified. Skipping secret loading.')

@@ -1,6 +1,8 @@
 # @stagetimerio/google-secrets
 
-Load secrets from Google Cloud Secret Manager into environment variables, similar to how `dotenv` works.
+Load secrets from Google Cloud Secret Manager into environment variables, similar to how `dotenv` works. 
+
+This package also automatically sets the Google Cloud project ID as `GOOGLE_PROJECT_ID` in your environment variables.
 
 ## Installation
 
@@ -20,6 +22,9 @@ async function start() {
   
   // Now you can use process.env.SECRET_NAME
   console.log(process.env.MY_SECRET);
+  
+  // You can also access the Google project ID
+  console.log(process.env.GOOGLE_PROJECT_ID);
 }
 ```
 
@@ -54,6 +59,10 @@ node -r dotenv/config -r @stagetimerio/google-secrets/load app.js
 The package uses a child process to load secrets when used with the `-r` flag. This approach is necessary because Node.js's `-r` flag mechanism expects synchronous module loading, but accessing the Secret Manager API requires asynchronous operations.
 
 By spawning a separate child process, we can perform asynchronous API calls and then wait for them to complete before continuing with the main application execution.
+
+### Google Project ID
+
+The package automatically sets the Google Cloud project ID as an environment variable `GOOGLE_PROJECT_ID`. This is determined from the authentication client and is always set, regardless of whether any secrets are loaded.
 
 ## Configuration
 
