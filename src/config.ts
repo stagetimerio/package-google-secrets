@@ -17,6 +17,8 @@ export interface GoogleSecretsConfig {
   debug: boolean
   /** Timeout for loading secrets in milliseconds */
   timeout: number | undefined
+  /** Whether to search for config files in directory tree */
+  autoDiscoverConfig: boolean
 }
 
 /**
@@ -28,6 +30,7 @@ const defaultConfig: GoogleSecretsConfig = {
   preserveExisting: true,
   debug: false,
   timeout: 5000,
+  autoDiscoverConfig: true
 }
 
 /**
@@ -38,7 +41,7 @@ export function getConfigFromEnv (): GoogleSecretsConfig {
 
   // Parse secret keys from comma-separated string
   if (process.env.GOOGLE_SECRETS_KEYS) {
-    config.secretKeys = process.env.GOOGLE_SECRETS_KEYS.split(',').map(key => key.trim())
+    config.secretKeys = process.env.GOOGLE_SECRETS_KEYS.split(',').map(key => key.trim()).filter(Boolean)
   }
 
   // Get path to secrets file
@@ -60,6 +63,11 @@ export function getConfigFromEnv (): GoogleSecretsConfig {
     if (!isNaN(timeout)) {
       config.timeout = timeout
     }
+  }
+
+  // Parse autoDiscoverConfig flag
+  if (process.env.GOOGLE_SECRETS_AUTO_DISCOVER !== undefined) {
+    config.autoDiscoverConfig = process.env.GOOGLE_SECRETS_AUTO_DISCOVER.toLowerCase() !== 'false'
   }
 
   return config

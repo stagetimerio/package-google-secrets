@@ -4,7 +4,7 @@
  */
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager'
 import type { GoogleSecretsConfig } from './config.js'
-import { readSecretKeysFromFile } from './utils.js'
+import { readSecretKeysFromFile, findConfigFile, parseConfigFile } from './utils.js'
 import * as logger from './logger.js'
 
 /**
@@ -43,7 +43,7 @@ export class SecretManager {
     const secretKeys = await this.getSecretKeys(projectId)
     const loadedSecrets: LoadedSecrets = {} as LoadedSecrets
 
-    // Add the project ID  as an environment variable and to the returned secrets object
+    // Add the project ID as an environment variable and to the returned secrets object
     loadedSecrets.GOOGLE_PROJECT_ID = projectId
     process.env.GOOGLE_PROJECT_ID = projectId
 
@@ -75,14 +75,14 @@ export class SecretManager {
 
     await Promise.all(loadPromises)
 
-    logger.info(`Successfully loaded ${Object.keys(loadedSecrets).length} secrets`)
+    logger.info(`Successfully loaded ${Object.keys(loadedSecrets).length - 1} secrets`) // -1 to exclude GOOGLE_PROJECT_ID
     return loadedSecrets
   }
 
   /**
    * Gets a specific secret value from Secret Manager
    */
-  private async getSecret(projectId: string, secretName: string): Promise<string> {
+  private async getSecret (projectId: string, secretName: string): Promise<string> {
     // Format the resource name
     const name = `projects/${projectId}/secrets/${secretName}/versions/latest`
 
@@ -106,20 +106,32 @@ export class SecretManager {
    * Gets the list of secret keys to load
    */
   private async getSecretKeys (projectId: string): Promise<string[]> {
-    // Use keys from config if provided
+    // Priority 1: Use keys from config if provided
     if (this.config.secretKeys && this.config.secretKeys.length > 0) {
-      logger.debug('Using provided secretKeys')
+      logger.debug('Using secretKeys from environment variables or options')
       return this.config.secretKeys
     }
 
-    // Read keys from file if specified
+    // Priority 2: Read keys from explicitly specified file if provided
     if (this.config.secretKeysFile) {
-      logger.debug('Using provided secretKeysFile')
+      logger.debug(`Using secretKeysFile from environment: ${this.config.secretKeysFile}`)
       return readSecretKeysFromFile(this.config.secretKeysFile)
     }
 
-    // If neither secretKeys nor secretKeysFile is provided, get all available secrets
-    logger.debug('Getting a list of all available secrets')
+    // Priority 3: Auto-discover config file if enabled
+    if (this.config.autoDiscoverConfig) {
+      const configFilePath = await findConfigFile()
+      if (configFilePath) {
+        const configKeys = await parseConfigFile(configFilePath)
+        if (configKeys && configKeys.length > 0) {
+          logger.debug(`Using auto-discovered config file: ${configFilePath}`)
+          return configKeys
+        }
+      }
+    }
+
+    // Priority 4: If no config sources found, get all available secrets
+    logger.debug('No secret keys specified. Getting a list of all available secrets')
     return this.listAllSecrets(projectId)
   }
 

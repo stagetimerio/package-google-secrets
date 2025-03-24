@@ -52,6 +52,41 @@ GOOGLE_SECRETS_DEBUG=true node -r @stagetimerio/google-secrets/load app.js
 node -r dotenv/config -r @stagetimerio/google-secrets/load app.js
 ```
 
+## Configuration File
+
+By default, the package will look for a `google-secrets.config.json` file in the current directory and parent directories (similar to how ESLint finds `.eslintrc`). This allows you to specify which secrets to load without setting environment variables.
+
+Example `google-secrets.config.json`:
+
+```json
+[
+  "API_KEY",
+  "DATABASE_PASSWORD",
+  "JWT_SECRET"
+]
+```
+
+Or with a `secrets` property:
+
+```json
+{
+  "secrets": [
+    "API_KEY",
+    "DATABASE_PASSWORD",
+    "JWT_SECRET"
+  ]
+}
+```
+
+## Configuration Priority
+
+The package uses the following priority when determining which secrets to load:
+
+1. `GOOGLE_SECRETS_KEYS` environment variable (comma-separated list)
+2. `GOOGLE_SECRETS_KEYS_FILE` environment variable (path to a JSON file)
+3. Auto-discovered `google-secrets.config.json` file
+4. If none of the above are found, all available secrets from the project are loaded
+
 ## Technical Details
 
 ### Child Process Architecture
@@ -64,43 +99,18 @@ By spawning a separate child process, we can perform asynchronous API calls and 
 
 The package automatically sets the Google Cloud project ID as an environment variable `GOOGLE_PROJECT_ID`. This is determined from the authentication client and is always set, regardless of whether any secrets are loaded.
 
-## Configuration
+## Environment Variable Configuration
 
 The package can be configured using environment variables:
 
-> **Note:** If neither `GOOGLE_SECRETS_KEYS` nor `GOOGLE_SECRETS_KEYS_FILE` is provided, the package will automatically fetch and load all available secrets from the specified project.
-
 | Environment Variable | Description | Default |
 |---|---|---|
-| `GOOGLE_SECRETS_KEYS` | Comma-separated list of secret names to load | None (loads all secrets if not specified) |
+| `GOOGLE_SECRETS_KEYS` | Comma-separated list of secret names to load | None |
 | `GOOGLE_SECRETS_KEYS_FILE` | Path to JSON file with secret names | None |
 | `GOOGLE_SECRETS_DEBUG` | Enable debug logging | `false` |
 | `GOOGLE_SECRETS_TIMEOUT` | Timeout for loading secrets in milliseconds | `5000` (5 seconds) |
 | `GOOGLE_SECRETS_PRESERVE_EXISTING` | Don't override existing env variables | `true` |
-
-### Secrets File Format
-
-You can specify secrets to load in a JSON file. The file can use either of these formats:
-
-Simple array format:
-```json
-[
-  "API_KEY",
-  "DATABASE_PASSWORD",
-  "JWT_SECRET"
-]
-```
-
-Or with a `secrets` key:
-```json
-{
-  "secrets": [
-    "API_KEY",
-    "DATABASE_PASSWORD",
-    "JWT_SECRET"
-  ]
-}
-```
+| `GOOGLE_SECRETS_AUTO_DISCOVER` | Enable auto-discovery of config file | `true` |
 
 ## Authentication
 
