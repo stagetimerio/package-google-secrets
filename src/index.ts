@@ -21,11 +21,12 @@ export async function loadSecrets (options: Partial<GoogleSecretsConfig> = {}): 
     // Apply timeout if specified
     if (config.timeout) {
       logger.debug(`Setting timeout for secret loading: ${config.timeout}ms`)
-      return await withTimeout(
+      const secrets = await withTimeout(
         secretManager.loadSecrets(),
         config.timeout,
         `Secret loading timed out after ${config.timeout}ms`
       )
+      logger.info(`Loaded ${Object.keys(secrets).length} secrets: ${Object.keys(secrets).join(', ')}`)
     }
 
     // Load secrets without timeout

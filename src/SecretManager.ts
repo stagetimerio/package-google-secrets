@@ -75,7 +75,7 @@ export class SecretManager {
 
     await Promise.all(loadPromises)
 
-    logger.info(`Successfully loaded ${Object.keys(loadedSecrets).length - 1} secrets`) // -1 to exclude GOOGLE_PROJECT_ID
+    logger.debug('All secrets loaded')
     return loadedSecrets
   }
 

@@ -5,10 +5,12 @@
 import { getConfigFromEnv } from './config.js'
 import { JSON_OUTPUT_MARKER } from './consts.js'
 import { SecretManager } from './SecretManager.js'
+import * as logger from './logger.js'
 
 async function loadAndOutput() {
   const config = getConfigFromEnv()
   const secretManager = new SecretManager(config)
+  logger.init(config)
 
   try {
     const secrets = await secretManager.loadSecrets()

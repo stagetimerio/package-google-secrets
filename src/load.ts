@@ -55,7 +55,7 @@ if (result.error) {
       }
     }
 
-    logger.debug(`Successfully loaded ${Object.keys(secrets).length} secrets`)
+    logger.info(`Loaded ${Object.keys(secrets).length} secrets: ${Object.keys(secrets).join(', ')}`)
   } catch (error) {
     logger.error(`Error parsing secrets: ${error instanceof Error ? error.message : String(error)}`)
   }
