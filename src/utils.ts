@@ -8,23 +8,38 @@ import * as logger from './logger.js'
 const CONFIG_FILENAME = 'google-secrets.config.json'
 
 /**
- * Reads secret keys from a JSON file
- * Supports both simple array format and {secrets: [...]} format
+ * Parses JSON content that can be either an array or an object with secrets/prefix
  */
-export async function readSecretKeysFromFile (filePath: string): Promise<string[]> {
+function parseSecretsJson (content: any): ConfigFileData {
+  // Handle both formats: simple array or {secrets: [...], prefix?: string}
+  if (Array.isArray(content)) {
+    return { secrets: content, prefix: undefined }
+  } else if (content && typeof content === 'object') {
+    const secrets = Array.isArray(content.secrets) ? content.secrets : undefined
+    const prefix = typeof content.prefix === 'string' ? content.prefix : undefined
+    return { secrets, prefix }
+  }
+  
+  return { secrets: undefined, prefix: undefined }
+}
+
+/**
+ * Reads secret keys from a JSON file
+ * Supports both simple array format and {secrets: [...], prefix?: string} format
+ * Returns both secrets and prefix if available
+ */
+export async function readSecretKeysFromFile (filePath: string): Promise<{ secrets: string[], prefix: string | undefined }> {
   try {
     logger.debug(`Reading secret keys from file: ${filePath}`)
     const fileContent = await readFile(filePath, { encoding: 'utf8' })
     const parsed = JSON.parse(fileContent)
+    const result = parseSecretsJson(parsed)
 
-    // Handle both formats: simple array or {secrets: [...]}
-    if (Array.isArray(parsed)) {
-      return parsed
-    } else if (parsed && Array.isArray(parsed.secrets)) {
-      return parsed.secrets
+    if (!result.secrets) {
+      throw new Error('Invalid secrets file format. Expected an array or an object with a "secrets" array.')
     }
 
-    throw new Error('Invalid secrets file format. Expected an array or an object with a "secrets" array.')
+    return { secrets: result.secrets, prefix: result.prefix }
   } catch (error) {
     logger.error(`Error reading secret keys file: ${error instanceof Error ? error.message : String(error)}`)
     throw error
@@ -75,26 +90,32 @@ export async function findConfigFile (startDir: string = process.cwd()): Promise
 }
 
 /**
- * Parse secret keys from a discovered config file
+ * Configuration file structure
  */
-export async function parseConfigFile (filePath: string): Promise<string[] | undefined> {
+export interface ConfigFileData {
+  secrets?: string[]
+  prefix?: string
+}
+
+/**
+ * Parse secret keys from a discovered config file
+ * Returns both secrets and prefix if available
+ */
+export async function parseConfigFile (filePath: string): Promise<ConfigFileData> {
   try {
     logger.debug(`Parsing config file: ${filePath}`)
     const fileContent = await readFile(filePath, { encoding: 'utf8' })
     const parsed = JSON.parse(fileContent)
+    const result = parseSecretsJson(parsed)
 
-    // Handle both formats: simple array or {secrets: [...]}
-    if (Array.isArray(parsed)) {
-      return parsed
-    } else if (parsed && Array.isArray(parsed.secrets)) {
-      return parsed.secrets
+    if (!result.secrets && !result.prefix) {
+      logger.error('Invalid config file format. Expected an array or an object with a "secrets" array and optional "prefix" string.')
     }
 
-    logger.error('Invalid config file format. Expected an array or an object with a "secrets" array.')
-    return undefined
+    return result
   } catch (error) {
     logger.error(`Error parsing config file: ${error instanceof Error ? error.message : String(error)}`)
-    return undefined
+    return { secrets: undefined, prefix: undefined }
   }
 }
 

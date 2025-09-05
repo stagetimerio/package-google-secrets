@@ -19,6 +19,8 @@ export interface GoogleSecretsConfig {
   timeout: number | undefined
   /** Whether to search for config files in directory tree */
   autoDiscoverConfig: boolean
+  /** Prefix to add to all environment variable names */
+  prefix: string | undefined
 }
 
 /**
@@ -30,7 +32,8 @@ const defaultConfig: GoogleSecretsConfig = {
   preserveExisting: true,
   debug: false,
   timeout: 5000,
-  autoDiscoverConfig: true
+  autoDiscoverConfig: true,
+  prefix: undefined
 }
 
 /**
@@ -69,6 +72,9 @@ export function getConfigFromEnv (): GoogleSecretsConfig {
   if (process.env.GOOGLE_SECRETS_AUTO_DISCOVER !== undefined) {
     config.autoDiscoverConfig = process.env.GOOGLE_SECRETS_AUTO_DISCOVER.toLowerCase() !== 'false'
   }
+
+  // Get prefix from environment
+  config.prefix = process.env.GOOGLE_SECRETS_PREFIX
 
   return config
 }

@@ -59,15 +59,18 @@ export class SecretManager {
       try {
         const secretValue = await this.getSecret(projectId!, secretKey)
 
+        // Apply prefix if configured
+        const envVarName = this.config.prefix ? `${this.config.prefix}${secretKey}` : secretKey
+
         // Only set environment variable if it doesn't exist or preserveExisting is false
-        if (!this.config.preserveExisting || process.env[secretKey] === undefined) {
-          process.env[secretKey] = secretValue
-          logger.debug(`Loaded secret: ${secretKey}`)
+        if (!this.config.preserveExisting || process.env[envVarName] === undefined) {
+          process.env[envVarName] = secretValue
+          logger.debug(`Loaded secret: ${secretKey} -> ${envVarName}`)
         } else {
-          logger.debug(`Skipped existing environment variable: ${secretKey}`)
+          logger.debug(`Skipped existing environment variable: ${envVarName}`)
         }
 
-        loadedSecrets[secretKey] = secretValue
+        loadedSecrets[envVarName] = secretValue
       } catch (error) {
         logger.error(`Error loading secret ${secretKey}: ${error instanceof Error ? error.message : String(error)}`)
       }
@@ -115,17 +118,32 @@ export class SecretManager {
     // Priority 2: Read keys from explicitly specified file if provided
     if (this.config.secretKeysFile) {
       logger.debug(`Using secretKeysFile from environment: ${this.config.secretKeysFile}`)
-      return readSecretKeysFromFile(this.config.secretKeysFile)
+      const fileData = await readSecretKeysFromFile(this.config.secretKeysFile)
+      
+      // If file has a prefix and no prefix was set via environment/options, use the file's prefix
+      if (fileData.prefix && !this.config.prefix) {
+        this.config.prefix = fileData.prefix
+        logger.debug(`Using prefix from secrets file: ${fileData.prefix}`)
+      }
+      
+      return fileData.secrets
     }
 
     // Priority 3: Auto-discover config file if enabled
     if (this.config.autoDiscoverConfig) {
       const configFilePath = await findConfigFile()
       if (configFilePath) {
-        const configKeys = await parseConfigFile(configFilePath)
-        if (configKeys && configKeys.length > 0) {
+        const configData = await parseConfigFile(configFilePath)
+        if (configData.secrets && configData.secrets.length > 0) {
           logger.debug(`Using auto-discovered config file: ${configFilePath}`)
-          return configKeys
+          
+          // If config file has a prefix and no prefix was set via environment/options, use the config file's prefix
+          if (configData.prefix && !this.config.prefix) {
+            this.config.prefix = configData.prefix
+            logger.debug(`Using prefix from config file: ${configData.prefix}`)
+          }
+          
+          return configData.secrets
         }
       }
     }
