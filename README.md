@@ -20,8 +20,15 @@ async function start() {
   // Load secrets into process.env
   await loadSecrets();
   
+  // Load specific secrets with a prefix
+  await loadSecrets({
+    secretKeys: ['GITHUB_TOKEN', 'DATABASE_URL'],
+    prefix: 'VITE_'
+  });
+  
   // Now you can use process.env.SECRET_NAME
   console.log(process.env.MY_SECRET);
+  console.log(process.env.VITE_GITHUB_TOKEN);
   
   // You can also access the Google project ID
   console.log(process.env.GOOGLE_PROJECT_ID);
@@ -40,6 +47,10 @@ GOOGLE_SECRETS_KEYS=API_KEY,DATABASE_PASSWORD node -r @stagetimerio/google-secre
 
 # Use a JSON file to specify secrets
 GOOGLE_SECRETS_KEYS_FILE=./secrets.json node -r @stagetimerio/google-secrets/load app.js
+
+# Add a prefix to all loaded environment variables
+GOOGLE_SECRETS_PREFIX=VITE_ GOOGLE_SECRETS_KEYS=GITHUB_TOKEN,API_KEY node -r @stagetimerio/google-secrets/load app.js
+# Results in: VITE_GITHUB_TOKEN and VITE_API_KEY
 
 # Enable debug output
 GOOGLE_SECRETS_DEBUG=true node -r @stagetimerio/google-secrets/load app.js
@@ -74,11 +85,12 @@ Or with a `secrets` property:
     "API_KEY",
     "DATABASE_PASSWORD",
     "JWT_SECRET"
-  ]
+  ],
+  "prefix": "VITE_"
 }
 ```
 
-## Configuration Priority
+### Configuration Priority
 
 The package uses the following priority when determining which secrets to load:
 
@@ -99,18 +111,53 @@ By spawning a separate child process, we can perform asynchronous API calls and 
 
 The package automatically sets the Google Cloud project ID as an environment variable `GOOGLE_PROJECT_ID`. This is determined from the authentication client and is always set, regardless of whether any secrets are loaded.
 
-## Environment Variable Configuration
+## Configuration Options
 
-The package can be configured using environment variables:
+### **Secret Keys**
+Config file: `secrets`
+Env Var: `GOOGLE_SECRETS_KEYS`
+Possible values: Array of secret names or comma-separated string
+Default: `undefined` (loads all secrets)
 
-| Environment Variable | Description | Default |
-|---|---|---|
-| `GOOGLE_SECRETS_KEYS` | Comma-separated list of secret names to load | None |
-| `GOOGLE_SECRETS_KEYS_FILE` | Path to JSON file with secret names | None |
-| `GOOGLE_SECRETS_DEBUG` | Enable debug logging | `false` |
-| `GOOGLE_SECRETS_TIMEOUT` | Timeout for loading secrets in milliseconds | `5000` (5 seconds) |
-| `GOOGLE_SECRETS_PRESERVE_EXISTING` | Don't override existing env variables | `true` |
-| `GOOGLE_SECRETS_AUTO_DISCOVER` | Enable auto-discovery of config file | `true` |
+### **Secret Keys File**
+Config file: N/A
+Env Var: `GOOGLE_SECRETS_KEYS_FILE`
+Possible values: Path to JSON file
+Default: `undefined`
+
+### **Prefix**
+Config file: `prefix`
+Env Var: `GOOGLE_SECRETS_PREFIX`
+Possible values: Any string
+Default: `undefined`
+
+### **Debug Mode**
+Config file: N/A
+Env Var: `GOOGLE_SECRETS_DEBUG`
+Possible values: `true`, `false`
+Default: `false`
+
+### **Timeout**
+Config file: N/A
+Env Var: `GOOGLE_SECRETS_TIMEOUT`
+Possible values: Number (milliseconds)
+Default: `5000`
+
+### **Preserve Existing**
+Config file: N/A
+Env Var: `GOOGLE_SECRETS_PRESERVE_EXISTING`
+Possible values: `true`, `false`
+Default: `true`
+
+### **Auto Discover Config**
+Config file: N/A
+Env Var: `GOOGLE_SECRETS_AUTO_DISCOVER`
+Possible values: `true`, `false`
+Default: `true`
+
+### Configuration Priority
+
+Programmatic options > Environment variables > Config file > Defaults
 
 ## Authentication
 
