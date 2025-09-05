@@ -178,3 +178,7 @@ Your scripts in `package.json` might look like:
 ## License
 
 ISC
+
+## Issues with Dependencies
+
+- rimraf: v6 only supports Node 22
