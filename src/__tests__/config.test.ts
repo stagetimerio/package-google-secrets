@@ -19,7 +19,7 @@ describe('config', () => {
       expect(config).toEqual({
         secretKeys: undefined,
         secretKeysFile: undefined,
-        preserveExisting: true,
+        overrideExisting: false,
         debug: false,
         timeout: 5000,
         autoDiscoverConfig: true,
@@ -47,7 +47,7 @@ describe('config', () => {
       process.env.GOOGLE_SECRETS_KEYS = 'KEY1,KEY2,KEY3'
       process.env.GOOGLE_SECRETS_KEYS_FILE = '/path/to/file.json'
       process.env.GOOGLE_SECRETS_PREFIX = 'TEST_'
-      process.env.GOOGLE_SECRETS_PRESERVE_EXISTING = 'false'
+      process.env.GOOGLE_SECRETS_OVERRIDE_EXISTING = 'true'
       process.env.GOOGLE_SECRETS_DEBUG = 'true'
       process.env.GOOGLE_SECRETS_TIMEOUT = '10000'
       process.env.GOOGLE_SECRETS_AUTO_DISCOVER = 'false'
@@ -57,7 +57,7 @@ describe('config', () => {
       expect(config).toEqual({
         secretKeys: ['KEY1', 'KEY2', 'KEY3'],
         secretKeysFile: '/path/to/file.json',
-        preserveExisting: false,
+        overrideExisting: true,
         debug: true,
         timeout: 10000,
         autoDiscoverConfig: false,

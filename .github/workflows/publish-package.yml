@@ -61,14 +61,8 @@ jobs:
       - name: Install Dependencies
         run: npm ci --loglevel=error
 
-      # Test step is commented out until tests are implemented
-      # But keeping the structure for future use
       - name: Run Unit Tests
-        run: |
-          echo "No tests implemented yet"
-          exit 0
-        # Uncomment when tests are available
-        # run: npm test
+        run: npm test
 
   publish:
     needs: test

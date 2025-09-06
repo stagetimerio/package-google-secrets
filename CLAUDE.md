@@ -77,7 +77,16 @@ The build process:
 3. Generates source maps and type definitions
 
 ### Testing & Quality
-Currently no tests defined - would need to be added for robust development.
+```bash
+# Run unit tests
+npm test
+
+# Run TypeScript compiler to check for type errors
+npx tsc --noEmit
+
+# IMPORTANT: Always run these after making changes
+npm test && npx tsc --noEmit
+```
 
 ## Key Environment Variables
 
