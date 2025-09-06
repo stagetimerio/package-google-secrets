@@ -52,6 +52,9 @@ GOOGLE_SECRETS_KEYS_FILE=./secrets.json node -r @stagetimerio/google-secrets/loa
 GOOGLE_SECRETS_PREFIX=VITE_ GOOGLE_SECRETS_KEYS=GITHUB_TOKEN,API_KEY node -r @stagetimerio/google-secrets/load app.js
 # Results in: VITE_GITHUB_TOKEN and VITE_API_KEY
 
+# Override existing environment variables (default behavior preserves existing ones)
+GOOGLE_SECRETS_OVERRIDE_EXISTING=true node -r @stagetimerio/google-secrets/load app.js
+
 # Enable debug output
 GOOGLE_SECRETS_DEBUG=true node -r @stagetimerio/google-secrets/load app.js
 ```
@@ -86,7 +89,8 @@ Or with a `secrets` property:
     "DATABASE_PASSWORD",
     "JWT_SECRET"
   ],
-  "prefix": "VITE_"
+  "prefix": "VITE_",
+  "overrideExisting": true
 }
 ```
 
@@ -143,11 +147,12 @@ Env Var: `GOOGLE_SECRETS_TIMEOUT`
 Possible values: Number (milliseconds)
 Default: `5000`
 
-### **Preserve Existing**
-Config file: N/A
-Env Var: `GOOGLE_SECRETS_PRESERVE_EXISTING`
+### **Override Existing**
+Config file: `overrideExisting`
+Env Var: `GOOGLE_SECRETS_OVERRIDE_EXISTING`
 Possible values: `true`, `false`
-Default: `true`
+Default: `false`
+Description: When set to `true`, will override existing environment variables with loaded secrets. When `false` (default), existing environment variables are preserved.
 
 ### **Auto Discover Config**
 Config file: N/A

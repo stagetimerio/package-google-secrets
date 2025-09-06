@@ -11,8 +11,8 @@ export interface GoogleSecretsConfig {
   secretKeys: string[] | undefined
   /** Path to JSON file with secret names */
   secretKeysFile: string | undefined
-  /** Don't override existing env variables */
-  preserveExisting: boolean
+  /** Override existing env variables (default: false, preserves existing) */
+  overrideExisting: boolean
   /** Print debug information */
   debug: boolean
   /** Timeout for loading secrets in milliseconds */
@@ -29,7 +29,7 @@ export interface GoogleSecretsConfig {
 const defaultConfig: GoogleSecretsConfig = {
   secretKeys: undefined,
   secretKeysFile: undefined,
-  preserveExisting: true,
+  overrideExisting: false,
   debug: false,
   timeout: 5000,
   autoDiscoverConfig: true,
@@ -50,9 +50,9 @@ export function getConfigFromEnv (): GoogleSecretsConfig {
   // Get path to secrets file
   config.secretKeysFile = process.env.GOOGLE_SECRETS_KEYS_FILE
 
-  // Parse boolean for preserving existing env vars
-  if (process.env.GOOGLE_SECRETS_PRESERVE_EXISTING !== undefined) {
-    config.preserveExisting = process.env.GOOGLE_SECRETS_PRESERVE_EXISTING.toLowerCase() !== 'false'
+  // Parse boolean for overriding existing env vars
+  if (process.env.GOOGLE_SECRETS_OVERRIDE_EXISTING !== undefined) {
+    config.overrideExisting = process.env.GOOGLE_SECRETS_OVERRIDE_EXISTING.toLowerCase() === 'true'
   }
 
   // Parse boolean for debug mode

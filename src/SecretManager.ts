@@ -62,8 +62,8 @@ export class SecretManager {
         // Apply prefix if configured
         const envVarName = this.config.prefix ? `${this.config.prefix}${secretKey}` : secretKey
 
-        // Only set environment variable if it doesn't exist or preserveExisting is false
-        if (!this.config.preserveExisting || process.env[envVarName] === undefined) {
+        // Only set environment variable if it doesn't exist or overrideExisting is true
+        if (this.config.overrideExisting || process.env[envVarName] === undefined) {
           process.env[envVarName] = secretValue
           logger.debug(`Loaded secret: ${secretKey} -> ${envVarName}`)
         } else {
@@ -126,6 +126,14 @@ export class SecretManager {
         logger.debug(`Using prefix from secrets file: ${fileData.prefix}`)
       }
       
+      // If file has overrideExisting and it wasn't set via environment/options, use the file's setting
+      if (fileData.overrideExisting !== undefined && 
+          !process.env.GOOGLE_SECRETS_OVERRIDE_EXISTING && 
+          this.config.overrideExisting === false) {
+        this.config.overrideExisting = fileData.overrideExisting
+        logger.debug(`Using overrideExisting from secrets file: ${fileData.overrideExisting}`)
+      }
+      
       return fileData.secrets
     }
 
@@ -141,6 +149,14 @@ export class SecretManager {
           if (configData.prefix && !this.config.prefix) {
             this.config.prefix = configData.prefix
             logger.debug(`Using prefix from config file: ${configData.prefix}`)
+          }
+          
+          // If config file has overrideExisting and it wasn't set via environment/options, use the config file's setting
+          if (configData.overrideExisting !== undefined && 
+              !process.env.GOOGLE_SECRETS_OVERRIDE_EXISTING && 
+              this.config.overrideExisting === false) {
+            this.config.overrideExisting = configData.overrideExisting
+            logger.debug(`Using overrideExisting from config file: ${configData.overrideExisting}`)
           }
           
           return configData.secrets

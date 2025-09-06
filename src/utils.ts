@@ -8,27 +8,28 @@ import * as logger from './logger.js'
 const CONFIG_FILENAME = 'google-secrets.config.json'
 
 /**
- * Parses JSON content that can be either an array or an object with secrets/prefix
+ * Parses JSON content that can be either an array or an object with secrets/prefix/overrideExisting
  */
 function parseSecretsJson (content: any): ConfigFileData {
-  // Handle both formats: simple array or {secrets: [...], prefix?: string}
+  // Handle both formats: simple array or {secrets: [...], prefix?: string, overrideExisting?: boolean}
   if (Array.isArray(content)) {
-    return { secrets: content, prefix: undefined }
+    return { secrets: content, prefix: undefined, overrideExisting: undefined }
   } else if (content && typeof content === 'object') {
     const secrets = Array.isArray(content.secrets) ? content.secrets : undefined
     const prefix = typeof content.prefix === 'string' ? content.prefix : undefined
-    return { secrets, prefix }
+    const overrideExisting = typeof content.overrideExisting === 'boolean' ? content.overrideExisting : undefined
+    return { secrets, prefix, overrideExisting }
   }
   
-  return { secrets: undefined, prefix: undefined }
+  return { secrets: undefined, prefix: undefined, overrideExisting: undefined }
 }
 
 /**
  * Reads secret keys from a JSON file
- * Supports both simple array format and {secrets: [...], prefix?: string} format
- * Returns both secrets and prefix if available
+ * Supports both simple array format and {secrets: [...], prefix?: string, overrideExisting?: boolean} format
+ * Returns secrets, prefix, and overrideExisting if available
  */
-export async function readSecretKeysFromFile (filePath: string): Promise<{ secrets: string[], prefix: string | undefined }> {
+export async function readSecretKeysFromFile (filePath: string): Promise<ConfigFileData & { secrets: string[] }> {
   try {
     logger.debug(`Reading secret keys from file: ${filePath}`)
     const fileContent = await readFile(filePath, { encoding: 'utf8' })
@@ -39,7 +40,7 @@ export async function readSecretKeysFromFile (filePath: string): Promise<{ secre
       throw new Error('Invalid secrets file format. Expected an array or an object with a "secrets" array.')
     }
 
-    return { secrets: result.secrets, prefix: result.prefix }
+    return { secrets: result.secrets, prefix: result.prefix, overrideExisting: result.overrideExisting }
   } catch (error) {
     logger.error(`Error reading secret keys file: ${error instanceof Error ? error.message : String(error)}`)
     throw error
@@ -95,6 +96,7 @@ export async function findConfigFile (startDir: string = process.cwd()): Promise
 export interface ConfigFileData {
   secrets?: string[]
   prefix?: string
+  overrideExisting?: boolean
 }
 
 /**
