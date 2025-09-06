@@ -50,7 +50,7 @@ if (result.error) {
     const output = stdoutParts.shift()
     if (output) secrets = JSON.parse(output.trim())
     for (const [key, value] of Object.entries(secrets)) {
-      if (typeof value === 'string' && (!config.preserveExisting || process.env[key] === undefined)) {
+      if (typeof value === 'string' && (config.overrideExisting || process.env[key] === undefined)) {
         process.env[key] = value
       }
     }

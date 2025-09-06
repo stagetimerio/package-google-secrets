@@ -4,7 +4,7 @@
  */
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager'
 import type { GoogleSecretsConfig } from './config.js'
-import { readSecretKeysFromFile, findConfigFile, parseConfigFile } from './utils.js'
+import { readSecretKeysFromFile, findConfigFile, parseConfigFile, ConfigFileData } from './utils.js'
 import * as logger from './logger.js'
 
 /**
@@ -106,6 +106,25 @@ export class SecretManager {
   }
 
   /**
+   * Updates config with settings from a config file if they haven't been set via environment/options
+   */
+  private updateConfigFromFile (fileData: ConfigFileData, source: string): void {
+    // If file has a prefix and no prefix was set via environment/options, use the file's prefix
+    if (fileData.prefix && !this.config.prefix) {
+      this.config.prefix = fileData.prefix
+      logger.debug(`Using prefix from ${source}: ${fileData.prefix}`)
+    }
+    
+    // If file has overrideExisting and it wasn't set via environment/options, use the file's setting
+    if (fileData.overrideExisting !== undefined && 
+        !process.env.GOOGLE_SECRETS_OVERRIDE_EXISTING && 
+        this.config.overrideExisting === false) {
+      this.config.overrideExisting = fileData.overrideExisting
+      logger.debug(`Using overrideExisting from ${source}: ${fileData.overrideExisting}`)
+    }
+  }
+
+  /**
    * Gets the list of secret keys to load
    */
   private async getSecretKeys (projectId: string): Promise<string[]> {
@@ -119,21 +138,7 @@ export class SecretManager {
     if (this.config.secretKeysFile) {
       logger.debug(`Using secretKeysFile from environment: ${this.config.secretKeysFile}`)
       const fileData = await readSecretKeysFromFile(this.config.secretKeysFile)
-      
-      // If file has a prefix and no prefix was set via environment/options, use the file's prefix
-      if (fileData.prefix && !this.config.prefix) {
-        this.config.prefix = fileData.prefix
-        logger.debug(`Using prefix from secrets file: ${fileData.prefix}`)
-      }
-      
-      // If file has overrideExisting and it wasn't set via environment/options, use the file's setting
-      if (fileData.overrideExisting !== undefined && 
-          !process.env.GOOGLE_SECRETS_OVERRIDE_EXISTING && 
-          this.config.overrideExisting === false) {
-        this.config.overrideExisting = fileData.overrideExisting
-        logger.debug(`Using overrideExisting from secrets file: ${fileData.overrideExisting}`)
-      }
-      
+      this.updateConfigFromFile(fileData, 'secrets file')
       return fileData.secrets
     }
 
@@ -144,21 +149,7 @@ export class SecretManager {
         const configData = await parseConfigFile(configFilePath)
         if (configData.secrets && configData.secrets.length > 0) {
           logger.debug(`Using auto-discovered config file: ${configFilePath}`)
-          
-          // If config file has a prefix and no prefix was set via environment/options, use the config file's prefix
-          if (configData.prefix && !this.config.prefix) {
-            this.config.prefix = configData.prefix
-            logger.debug(`Using prefix from config file: ${configData.prefix}`)
-          }
-          
-          // If config file has overrideExisting and it wasn't set via environment/options, use the config file's setting
-          if (configData.overrideExisting !== undefined && 
-              !process.env.GOOGLE_SECRETS_OVERRIDE_EXISTING && 
-              this.config.overrideExisting === false) {
-            this.config.overrideExisting = configData.overrideExisting
-            logger.debug(`Using overrideExisting from config file: ${configData.overrideExisting}`)
-          }
-          
+          this.updateConfigFromFile(configData, 'config file')
           return configData.secrets
         }
       }
