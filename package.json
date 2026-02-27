@@ -54,8 +54,7 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "@google-cloud/secret-manager": "^6.0.1",
-    "cross-dirname": "^0.1.0"
+    "@google-cloud/secret-manager": "^6.0.1"
   },
   "devDependencies": {
     "@types/node": "^24.3.1",

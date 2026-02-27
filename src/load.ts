@@ -3,8 +3,8 @@
  */
 import { getConfigFromEnv } from './config.js'
 import { spawnSync } from 'child_process'
-import { getDirname } from 'cross-dirname'
-import { join } from 'path'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
 import * as logger from './logger.js'
 import { JSON_OUTPUT_MARKER } from './consts.js'
 
@@ -21,10 +21,10 @@ function loadSecretsSync () {
 
   logger.debug('Initializing Google Secrets')
 
-  // Determine paths
-  // Determine the correct extension based on whether we're running as CJS or ESM
+  // Determine the correct loader path and extension based on CJS vs ESM
+  const currentDir = dirname(fileURLToPath(import.meta.url))
   const ext = typeof __filename !== 'undefined' ? '.cjs' : '.mjs'
-  const loaderPath = join(getDirname(), `loader-child${ext}`)
+  const loaderPath = join(currentDir, `loader-child${ext}`)
 
   // Use spawnSync to run the loader script and wait for completion
   logger.debug('Spawning secret loader process')
