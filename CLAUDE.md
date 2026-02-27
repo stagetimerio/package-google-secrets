@@ -10,11 +10,12 @@ The package supports both programmatic usage and command-line preloading via Nod
 
 ## Architecture
 
-### Dual Build System
-- **TypeScript source** in `src/` compiled to dual output formats
-- **CommonJS** build in `dist/cjs/` for Node.js compatibility
-- **ESM** build in `dist/esm/` for modern module systems
-- **Type definitions** in `dist/types/` for TypeScript consumers
+### Build System (tsdown)
+- **TypeScript source** in `src/` compiled via tsdown to dual output formats
+- **CommonJS** `.cjs` files in `dist/`
+- **ESM** `.mjs` files in `dist/`
+- **Type definitions** `.d.mts` / `.d.cts` in `dist/`
+- Configuration in `tsdown.config.ts`
 
 ### Core Components
 
@@ -55,38 +56,42 @@ The package uses a unique child process architecture for the `-r` flag usage:
 # Build both CommonJS and ESM distributions
 npm run build
 
-# Watch mode for development (rebuild on changes)
-npm run watch
-
-# Clean and rebuild everything
-npm run build
+# Type-check without emitting
+npm run typecheck
 ```
-
-### Build System Details
-```bash
-# Build ESM version only
-npm run build:esm
-
-# Build CommonJS version only  
-npm run build:cjs
-```
-
-The build process:
-1. Compiles TypeScript using separate tsconfig files for each target
-2. Creates `package.json` files in each dist folder to define module type
-3. Generates source maps and type definitions
 
 ### Testing & Quality
 ```bash
 # Run unit tests
 npm test
 
-# Run TypeScript compiler to check for type errors
-npx tsc --noEmit
-
 # IMPORTANT: Always run these after making changes
-npm test && npx tsc --noEmit
+npm test && npm run typecheck
 ```
+
+### Integration Testing (requires Google Cloud credentials)
+
+Use a service account key to test against real Google Cloud Secret Manager:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+
+# Test programmatic API (CJS and ESM)
+node -e "const { loadSecrets } = require('./dist/index.cjs'); loadSecrets().then(s => console.log('CJS OK:', Object.keys(s).length, 'secrets'))"
+node --input-type=module -e "import { loadSecrets } from './dist/index.mjs'; const s = await loadSecrets(); console.log('ESM OK:', Object.keys(s).length, 'secrets')"
+
+# Test -r / --import loader (child process architecture)
+node -r ./dist/load.cjs -e 'console.log("CJS -r OK:", Boolean(process.env.GOOGLE_PROJECT_ID))'
+node --import ./dist/load.mjs -e 'console.log("ESM --import OK:", Boolean(process.env.GOOGLE_PROJECT_ID))'
+
+# Test with a google-secrets.config.json file (auto-discovery)
+echo '["SECRET_NAME_1", "SECRET_NAME_2"]' > google-secrets.config.json
+node -r ./dist/load.cjs -e 'console.log("Config file OK:", Boolean(process.env.SECRET_NAME_1))'
+rm google-secrets.config.json
+```
+
+The stagetimer-dev service account key is at:
+`~/htdocs/stagetimer/.secrets/stagetimer-dev-firebase-adminsdk-ml4xv-537a7335b5.json`
 
 ## Key Environment Variables
 
@@ -160,8 +165,8 @@ node -r dotenv/config -r @stagetimerio/google-secrets/load app.js
 
 ### Module System
 - ESM-first design with CommonJS compatibility
-- Dual package.json approach for proper module resolution
-- Explicit file extensions in imports (`.js` for compiled output)
+- tsdown produces `.mjs`/`.cjs` dual output with `.d.mts`/`.d.cts` type definitions
+- Uses `import.meta.url` for path resolution (tsdown shims it in CJS output)
 
 ### Error Handling Pattern
 - Try/catch blocks with specific error messages
@@ -172,12 +177,11 @@ node -r dotenv/config -r @stagetimerio/google-secrets/load app.js
 
 ### Production
 - `@google-cloud/secret-manager` - Google Cloud SDK
-- `cross-dirname` - Cross-platform `__dirname` equivalent for ESM
 
 ### Development
-- `typescript` - TypeScript compiler
-- `concurrently` - Run multiple build processes
-- `rimraf` - Cross-platform file deletion
+- `tsdown` - Build tool for dual CJS/ESM output
+- `typescript` - TypeScript compiler (type-checking only, tsdown handles compilation)
+- `vitest` - Test runner
 
 ## Integration with Larger Stagetimer Project
 

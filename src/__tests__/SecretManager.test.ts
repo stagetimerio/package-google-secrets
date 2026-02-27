@@ -38,7 +38,7 @@ describe('SecretManager', () => {
     vi.clearAllMocks()
     
     // Mock the SecretManagerServiceClient constructor
-    ;(SecretManagerServiceClient as any).mockImplementation(() => mockClient)
+    ;(SecretManagerServiceClient as any).mockImplementation(function () { return mockClient })
     
     // Mock default project ID
     mockClient.auth.getProjectId.mockResolvedValue('test-project')
