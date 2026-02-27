@@ -1,8 +1,8 @@
 /**
  * Main entry point for programmatic usage
  */
-import { GoogleSecretsConfig, mergeConfig } from './config.js'
-import { SecretManager, LoadedSecrets } from './SecretManager.js'
+import { type GoogleSecretsConfig, mergeConfig } from './config.js'
+import { SecretManager, type LoadedSecrets } from './SecretManager.js'
 import { withTimeout } from './utils.js'
 import * as logger from './logger.js'
 

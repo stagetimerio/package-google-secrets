@@ -22,7 +22,9 @@ function loadSecretsSync () {
   logger.debug('Initializing Google Secrets')
 
   // Determine paths
-  const loaderPath = join(getDirname(), 'loader-child.js')
+  // Determine the correct extension based on whether we're running as CJS or ESM
+  const ext = typeof __filename !== 'undefined' ? '.cjs' : '.mjs'
+  const loaderPath = join(getDirname(), `loader-child${ext}`)
 
   // Use spawnSync to run the loader script and wait for completion
   logger.debug('Spawning secret loader process')

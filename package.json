@@ -5,28 +5,28 @@
   "license": "ISC",
   "author": "Lukas Hermann <hey@lukashermann.dev>",
   "type": "module",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/types/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/types/index.d.ts",
-        "default": "./dist/esm/index.js"
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
       },
       "require": {
-        "types": "./dist/types/index.d.ts",
-        "default": "./dist/cjs/index.js"
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
       }
     },
     "./load": {
       "import": {
-        "types": "./dist/types/load.d.ts",
-        "default": "./dist/esm/load.js"
+        "types": "./dist/load.d.mts",
+        "default": "./dist/load.mjs"
       },
       "require": {
-        "types": "./dist/types/load.d.ts",
-        "default": "./dist/cjs/load.js"
+        "types": "./dist/load.d.cts",
+        "default": "./dist/load.cjs"
       }
     }
   },
@@ -34,11 +34,10 @@
     "doc": "docs"
   },
   "scripts": {
-    "watch": "npm run build && concurrently \"tsc -p tsconfig.cjs.json --watch\" \"tsc -p tsconfig.cjs.json --watch\"",
-    "build": "rimraf dist && npm run build:esm && npm run build:cjs",
-    "build:cjs": "tsc -p tsconfig.cjs.json && echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json",
-    "build:esm": "tsc -p tsconfig.esm.json && echo '{\"type\": \"module\"}' > dist/esm/package.json",
-    "test": "vitest"
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "prepublishOnly": "npm run typecheck && npm run build"
   },
   "files": [
     "dist",
@@ -60,8 +59,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.3.1",
-    "concurrently": "^9.1.2",
-    "rimraf": "^5.0.5",
+    "tsdown": "^0.16.8",
     "typescript": "^5.8.2",
     "vitest": "^3.2.4"
   }
