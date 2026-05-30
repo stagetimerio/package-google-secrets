@@ -57,8 +57,13 @@
   },
   "devDependencies": {
     "@types/node": "^25.3.2",
-    "tsdown": "^0.20.3",
-    "typescript": "^5.9.3",
+    "tsdown": "^0.22.0",
+    "typescript": "^6.0.3",
     "vitest": "^4.0.18"
+  },
+  "overrides": {
+    "rolldown": {
+      "typescript": "$typescript"
+    }
   }
 }
